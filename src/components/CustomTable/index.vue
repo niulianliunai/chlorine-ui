@@ -281,9 +281,7 @@ export default {
       this.page()
     },
     del(row) {
-      this.$confirmBox().then(() => {
-        row.createTime = null
-        row.updateTime = null
+      this.$confirm('确认删除？', '提示').then(() => {
         row.deleted = true
         this.saveAll(row)
       })
