@@ -10,8 +10,8 @@
       label-width="120px"
     >
       <el-form-item v-for="item of form" v-show="item.type" :key="item.name" :label="item.label">
-        <el-input v-if="item.type==='input'" v-model="item.value" @input="$forceUpdate()" />
-        <el-input v-else-if="item.type==='textarea'" v-model="item.value" type="textarea" />
+        <el-input v-if="item.type==='input'" v-model="item.value" @input="$forceUpdate()"/>
+        <el-input v-else-if="item.type==='textarea'" v-model="item.value" type="textarea"/>
         <el-select v-else-if="item.type==='select'" v-model="item.value" @input="$forceUpdate()">
           <el-option
             v-for="option in item.options"
@@ -37,8 +37,9 @@
           :on-remove="handleRemove"
           :before-upload="beforeUpload"
         >
-          <img v-if="item.value" :src="baseImgUrl + item.value" class="avatar">
-          <i v-else class="el-icon-plus avatar-uploader-icon" />
+          <img v-if="imgUrl" :src="imgUrl" class="avatar" alt="">
+          <img v-else-if="item.value" :src="item.value" class="avatar" alt="">
+          <i v-else class="el-icon-plus avatar-uploader-icon"/>
         </el-upload>
       </el-form-item>
     </el-form>
@@ -52,6 +53,7 @@
 <script>
 
 import {getToken} from "@/utils/auth";
+import {generatePresignedUrl} from "@/chlorine/api/minio";
 
 export default {
   name: 'CustomDialog',
@@ -70,7 +72,7 @@ export default {
     },
     form: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     },
@@ -81,26 +83,38 @@ export default {
   },
   data() {
     return {
-      actionUrl: process.env.VUE_APP_NEW_API + process.env.VUE_APP_IMAGE_ACTION_API,
-      baseImgUrl: process.env.VUE_APP_NEW_API + process.env.VUE_APP_IMAGE_GET_API
+      actionUrl: process.env.VUE_APP_BASE_API + process.env.VUE_APP_IMAGE_ACTION_API,
+      baseImgUrl: process.env.VUE_APP_BASE_API + process.env.VUE_APP_IMAGE_GET_API,
+      imgUrl: ""
     }
   },
   methods: {
+    async generatePresignedUrl(v) {
+      if (this.imgUrl.startsWith("http")) {
+        return
+      }
+      await generatePresignedUrl(v).then(resp => {
+        this.imgUrl = resp
+      })
+    },
     getToken() {
       return getToken()
-    },
+    }
+    ,
     handleRemove(file) {
       console.log(file)
-    },
-    handleSuccess(res) {
+    }
+    ,
+    async handleSuccess(res) {
       for (let i = 0; i < this.form.length; i++) {
         if (this.form[i].type === 'image') {
-          this.form[i].value = res.data
-          console.log(this.form)
+          this.form[i].value = res
+          await this.generatePresignedUrl(res)
           this.$forceUpdate()
         }
       }
-    },
+    }
+    ,
     beforeUpload(file) {
       // const isJPG = file.type === 'image/jpeg';
       const isLt10M = file.size / 1024 / 1024 < 10
@@ -109,10 +123,12 @@ export default {
         this.$message.error('上传图片大小不能超过 10MB!')
       }
       return isLt10M
-    },
+    }
+    ,
     close() {
       this.$emit('input', false)
-    },
+    }
+    ,
     getSubmitForm(form) {
       const res = {}
       for (const item of form) {
