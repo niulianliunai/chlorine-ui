@@ -31,7 +31,7 @@
           v-if="item.type==='image'"
           class="avatar-uploader"
           :action="actionUrl"
-          :headers="{'Authorization':getAuth()}"
+          :headers="{'Authorization':getToken()}"
           :show-file-list="false"
           :on-success="handleSuccess"
           :on-remove="handleRemove"
@@ -50,7 +50,8 @@
 </template>
 
 <script>
-import { getAuth } from '@/utils/auth'
+
+import {getToken} from "@/utils/auth";
 
 export default {
   name: 'CustomDialog',
@@ -85,8 +86,8 @@ export default {
     }
   },
   methods: {
-    getAuth() {
-      return getAuth()
+    getToken() {
+      return getToken()
     },
     handleRemove(file) {
       console.log(file)

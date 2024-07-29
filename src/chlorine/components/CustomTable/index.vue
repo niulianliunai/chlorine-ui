@@ -240,7 +240,6 @@ export default {
       // 使用 .prevent 修饰符阻止默认的链接点击行为
     },
     showSaveDialog(row) {
-      console.log(row)
       this.row = row
       this.saveDialog = true
     },
